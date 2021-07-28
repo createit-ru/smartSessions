@@ -1,0 +1,11 @@
+Changelog for smartSessions.
+
+1.0.0-rc
+==============
+- Отдельное управление сессиями ботов
+- Автоматическое создание класс smartSessionHandler в директории /core/model/modx/
+
+1.0.0-beta
+==============
+- First release.
+- Added user id, user agent, ip
