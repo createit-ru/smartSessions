@@ -12,4 +12,11 @@ return [
         'value' => 604800,
         'area' => 'smartsessions_main',
     ],
+
+    'authorized_users_gc_maxlifetime' => [
+        'xtype' => 'numberfield',
+        'value' => 604800,
+        'area' => 'smartsessions_main',
+    ],
+
 ];

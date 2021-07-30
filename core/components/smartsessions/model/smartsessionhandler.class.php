@@ -7,7 +7,11 @@ class smartSessionHandler extends modSessionHandler {
     /**
      * @var int Максимальное время жизни для сессий различных ботов, описанных в $botSignatures
      */
-    public $botsMaxLifetime = 60 *60 * 1;
+    public $botsMaxLifetime = 0;
+    /**
+     * @var int Максимальное время жизни для сессий авторизованных пользователей
+     */
+    public $authorizedUsersMaxLifetime = 0;
 
     /**
      * @var array Список сигнатур различных ботов
@@ -33,12 +37,19 @@ class smartSessionHandler extends modSessionHandler {
             $this->botsMaxLifetime = $this->gcMaxLifetime;
         }
 
-
         $botSignatures = $this->modx->getOption('smartsessions_bot_signaturess');
         $botSignatures = explode("|", $botSignatures);
         $botSignatures = array_map("trim", $botSignatures);
 
         $this->botSignatures = $botSignatures;
+
+        $authorizedUsersMaxLifetime = (integer) $this->modx->getOption('smartsessions_authorized_users_gc_maxlifetime');
+        if ($authorizedUsersMaxLifetime > 0) {
+            $this->authorizedUsersMaxLifetime = $authorizedUsersMaxLifetime;
+        } else {
+            $this->authorizedUsersMaxLifetime = $this->gcMaxLifetime;
+        }
+
 
         $this->modx->addPackage('smartsessions', MODX_CORE_PATH . 'components/smartsessions/model/');
     }
@@ -106,18 +117,80 @@ class smartSessionHandler extends modSessionHandler {
      * @return boolean True if session records were removed.
      */
     public function gc($max) {
-        $tableName = $this->modx->getTableName('smartSession');
 
-        // Удаление сессий различных ботов
-        $botsMaxtime = time() - $this->botsMaxLifetime;
+        // Удаляем сессии ботов
+        $result1 = $this->removeBotSessions();
+
+        // Удаляем сессии авторизованных пользователей
+        $result2 = $this->removeAuthorizedUserSessions();
+
+        // Удаляем все остальные сессии
+        $result3 = $this->removeCommonSessions();
+
+        return $result1 !== false && $result2 !== false && $result3 !== false;
+    }
+
+
+    /**
+     * Удаление сессий ботов
+     * @return bool
+     */
+    private function removeBotSessions() {
+        $maxtime = time() - $this->botsMaxLifetime;
+        $removed = 0;
         foreach ($this->botSignatures as $bot) {
-            $this->modx->exec("DELETE FROM {$tableName} WHERE `access` < {$botsMaxtime} AND `user_agent` LIKE \"%{$bot}%\";");
+            $criteria = array(
+                "access:<" => $maxtime,
+                "user_agent:LIKE" => "%" . $bot . "%",
+            );
+            $result = $this->modx->removeCollection(
+                $this->modx->getTableName('smartSession'),
+                $criteria
+            );
+            if($result !== false) {
+                $removed += $result;
+            }
         }
 
-        // Обычное удаление устаревших сессий
+        return true;
+    }
+
+    /**
+     * Удаление сессий авторизованных пользователей
+     * @return bool
+     */
+    private function removeAuthorizedUserSessions() {
+        $maxtime = time() - $this->authorizedUsersMaxLifetime;
+
+        $criteria = array(
+            "access:<" => $maxtime,
+            "user_id:>" => 0,
+        );
+        $result = $this->modx->removeCollection(
+            $this->modx->getTableName('smartSession'),
+            $criteria
+        );
+        return $result !== false;
+    }
+
+    /**
+     * Удаление обычных сессий
+     * @return bool
+     */
+    private function removeCommonSessions() {
         $maxtime = time() - $this->gcMaxLifetime;
-        // TODO: может быть стоит заменить на запрос DELETE, как выше?
-        $result = $this->modx->removeCollection('smartSession', array("{$this->modx->escape('access')} < {$maxtime}"));
+        $criteria = array(
+            "access:<" => $maxtime
+        );
+        // Если время хранения сессий авторизованных пользователей больше, чем общее время, то не будем удаляем эти записи
+        if($this->authorizedUsersMaxLifetime > $this->gcMaxLifetime) {
+            $criteria[] = array(
+                "user_id:IS" => null,
+                "OR:user_id:=" => 0
+            );
+        }
+
+        $result = $this->modx->removeCollection('smartSession', $criteria);
         return $result !== false;
     }
 
@@ -138,9 +211,14 @@ class smartSessionHandler extends modSessionHandler {
             $this->modx->getRequest();
             $ip = $this->modx->request->getClientIp();
 
+            $user_agent = filter_input(INPUT_SERVER, $_SERVER['HTTP_USER_AGENT']);
+            if(empty($user_agent)) {
+                $user_agent = "";
+            }
+
             $this->session= $this->modx->newObject('smartSession');
             $this->session->set('id', $id);
-            $this->session->set('user_agent', filter_input(INPUT_SERVER, $_SERVER['HTTP_USER_AGENT']));
+            $this->session->set('user_agent', $user_agent);
             $this->session->set('ip', $ip['ip']);
 
             $user = $this->modx->getAuthenticatedUser($this->modx->context ? $this->modx->context->key : '');
