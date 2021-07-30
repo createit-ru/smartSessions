@@ -140,7 +140,7 @@ class smartSessionHandler extends modSessionHandler {
 
             $this->session= $this->modx->newObject('smartSession');
             $this->session->set('id', $id);
-            $this->session->set('user_agent', $_SERVER['HTTP_USER_AGENT']);
+            $this->session->set('user_agent', filter_input(INPUT_SERVER, $_SERVER['HTTP_USER_AGENT']));
             $this->session->set('ip', $ip['ip']);
 
             $user = $this->modx->getAuthenticatedUser($this->modx->context ? $this->modx->context->key : '');
