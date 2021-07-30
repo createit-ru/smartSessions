@@ -211,7 +211,7 @@ class smartSessionHandler extends modSessionHandler {
             $this->modx->getRequest();
             $ip = $this->modx->request->getClientIp();
 
-            $user_agent = filter_input(INPUT_SERVER, $_SERVER['HTTP_USER_AGENT']);
+            $user_agent = filter_input(INPUT_SERVER, 'HTTP_USER_AGENT', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
             if(empty($user_agent)) {
                 $user_agent = "";
             }
