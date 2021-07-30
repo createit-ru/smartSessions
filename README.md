@@ -1,34 +1,33 @@
-## Quick start
+## smartSessions
 
-* Install MODX Revolution
+Это компонент для MODX Revolution, который заменяет стандартный обработчик сессий modSessionHandler,
+добавляя следующую информацию к записям сессий:
+* user_agent
+* user_id — если пользователь авторизован
+* ip — ip адрес
 
-* Upload this package into the `Extras` directory in the root of site
+Благодаря этому можно получить расширенную информацию о посетителях на вашем сайте, 
+а также по разному хранить сессии, например, очищать сессии поисковых ботов чаще, 
+чем сессии реальных пользователей, тем самым уменьшить размер базы данных
 
-* You need to rename it to `anyOtherName` your package, so enter into SSH console and run
+
+## Установка
+1. Установите пакет из репозитория (или соберите сами из исходников)
+2. В системной настойке `session_handler_class` поставьте значение `smartSessionHandler`
+3. Проверьте, что данные записываются в таблицу `modx_smart_sessions`. Таблица `modx_sessions` теперь не используется.
+
+## Настройка
+
+* `smartsessions_bot_signatures` — список сигнатур поисковых ботов, разделенных вертикальной чертой, 
+для поиска типа LIKE по полю user_agent. Добавьте сюда ботов, которые часто посещают ваш сайт.
+* `smartsessions_bots_gc_maxlifetime` — время жизни сессий ботов, указанных в настройке smartsessions_bot_signatures. 
+Уменьшая его вы уменьшите срок хранения сессий ботов и сократите размер таблицы с сессиями.
+
+## Полезное
+SQL запрос для просмотра количества сессий, сгруппированных по user_agent:
 ```
-php ~/www/Extras/smartSessions/rename_it.php anyOtherName
+SELECT `user_agent`, COUNT(*) 
+   FROM `modx_smart_sessions` 
+   GROUP BY `user_agent` 
+   ORDER BY `COUNT(*)` DESC
 ```
-*path on your site may differs*
-
-* Then install it on dev site
-```
-php ~/www/Extras/anyOtherName/_build/build.php
-``` 
-
-## Settings
-
-See `_build/config.inc.php` for editable package options.
-
-All resolvers and elements are in `_build` path. All files that begins not from `.` or `_` will be added automatically. 
-
-If you will add a new type of element, you will need to add the method with that name into `build.php` script as well.
-
-## Build and download
-
-You can build package at any time by opening `http://dev.site.com/Extras/anyOtherName/_build/build.php`
-
-If you want to download built package - just add `?download=1` to the address.
-
-## Example deploy settings
-
-[![](https://file.modx.pro/files/3/a/b/3ab2753b9e8b6c09a4ca0da819db37b6s.jpg)](https://file.modx.pro/files/3/a/b/3ab2753b9e8b6c09a4ca0da819db37b6.png) [![](https://file.modx.pro/files/c/1/a/c1afbb8988ab358a0b400cdcdb0391d4s.jpg)](https://file.modx.pro/files/c/1/a/c1afbb8988ab358a0b400cdcdb0391d4.png)
