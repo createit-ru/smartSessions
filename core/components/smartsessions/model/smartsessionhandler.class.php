@@ -37,7 +37,7 @@ class smartSessionHandler extends modSessionHandler {
             $this->botsMaxLifetime = $this->gcMaxLifetime;
         }
 
-        $botSignatures = $this->modx->getOption('smartsessions_bot_signaturess');
+        $botSignatures = $this->modx->getOption('smartsessions_bot_signatures');
         $botSignatures = explode("|", $botSignatures);
         $botSignatures = array_map("trim", $botSignatures);
 
