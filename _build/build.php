@@ -706,10 +706,10 @@ class smartSessionsPackage
         ]);*/
 
 
-        $vehicle->resolve('file', [
+        /*$vehicle->resolve('file', [
             'source' => $this->config['core_model_modx'],
             'target' => "return MODX_CORE_PATH . 'model/';",
-        ]);
+        ]);*/
 
         // Add resolvers into vehicle
         $resolvers = scandir($this->config['resolvers']);
