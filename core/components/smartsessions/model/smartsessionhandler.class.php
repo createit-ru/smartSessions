@@ -143,10 +143,7 @@ class smartSessionHandler extends modSessionHandler {
                 "access:<" => $maxtime,
                 "user_agent:LIKE" => "%" . $bot . "%",
             );
-            $result = $this->modx->removeCollection(
-                $this->modx->getTableName('smartSession'),
-                $criteria
-            );
+            $result = $this->modx->removeCollection('smartSession', $criteria);
             if($result !== false) {
                 $removed += $result;
             }
@@ -166,10 +163,7 @@ class smartSessionHandler extends modSessionHandler {
             "access:<" => $maxtime,
             "user_id:>" => 0,
         );
-        $result = $this->modx->removeCollection(
-            $this->modx->getTableName('smartSession'),
-            $criteria
-        );
+        $result = $this->modx->removeCollection('smartSession', $criteria);
         return $result !== false;
     }
 
@@ -206,7 +200,7 @@ class smartSessionHandler extends modSessionHandler {
      * could not be retrieved and/or created.
      */
     protected function _getSession($id, $autoCreate= false) {
-        $this->session= $this->modx->getObject('smartSession', array('id' => $id), $this->cacheLifetime);
+        $this->session = $this->modx->getObject('smartSession', array('id' => $id), $this->cacheLifetime);
         if ($autoCreate && !is_object($this->session)) {
             $this->modx->getRequest();
             $ip = $this->modx->request->getClientIp();
