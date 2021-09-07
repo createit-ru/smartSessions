@@ -84,7 +84,9 @@ class smartSessionHandler extends modSessionHandler {
         $written= false;
         if ($this->_getSession($id, true)) {
             $this->session->set('data', $data);
-            if ($this->session->isNew() || $this->session->isDirty('data') || ($this->cacheLifetime > 0 && (time() - strtotime($this->session->get('access'))) > $this->cacheLifetime)) {
+            if ($this->session->isNew()
+                || $this->session->isDirty('data')
+                || ($this->cacheLifetime > 0 && (time() - strtotime($this->session->get('access'))) > $this->cacheLifetime)) {
                 $this->session->set('access', time());
             }
             $written= $this->session->save($this->cacheLifetime);
@@ -176,7 +178,8 @@ class smartSessionHandler extends modSessionHandler {
         $criteria = array(
             "access:<" => $maxtime
         );
-        // Если время хранения сессий авторизованных пользователей больше, чем общее время, то не будем удаляем эти записи
+        // Если время хранения сессий авторизованных пользователей больше, чем общее время,
+        // то не будем удаляем эти записи
         if($this->authorizedUsersMaxLifetime > $this->gcMaxLifetime) {
             $criteria[] = array(
                 "user_id:IS" => null,
@@ -209,6 +212,9 @@ class smartSessionHandler extends modSessionHandler {
             if(empty($user_agent)) {
                 $user_agent = "";
             }
+            // Ограничиваем длину сохраняемого user_agent,
+            // т.к. размер заголовка не лимитирован, а в базе выделено только 255 символов
+            $user_agent = mb_substr($user_agent, 0, 255);
 
             $this->session= $this->modx->newObject('smartSession');
             $this->session->set('id', $id);
@@ -221,7 +227,9 @@ class smartSessionHandler extends modSessionHandler {
             }
 
         }
-        if (!($this->session instanceof smartSession) || $id != $this->session->get('id') || !$this->session->validate()) {
+        if (!($this->session instanceof smartSession)
+            || $id != $this->session->get('id')
+            || !$this->session->validate()) {
             $this->modx->log(modX::LOG_LEVEL_INFO, 'There was an error retrieving or creating session id: ' . $id);
         }
         return $this->session;
