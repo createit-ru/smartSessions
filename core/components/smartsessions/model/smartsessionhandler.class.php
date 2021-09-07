@@ -214,7 +214,7 @@ class smartSessionHandler extends modSessionHandler {
             }
             // Ограничиваем длину сохраняемого user_agent,
             // т.к. размер заголовка не лимитирован, а в базе выделено только 255 символов
-            $user_agent = mb_substr($user_agent, 0, 255);
+            $user_agent = substr($user_agent, 0, 255);
 
             $this->session= $this->modx->newObject('smartSession');
             $this->session->set('id', $id);
