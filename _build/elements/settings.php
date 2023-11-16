@@ -3,7 +3,7 @@
 return [
     'bot_signatures' => [
         'xtype' => 'textfield',
-        'value' => "YandexBot|Yandex|Googlebot|DataForSeoBot|DotBot|bingbot|Mail.RU_Bot|PetalBot|MegaIndex.ru|serpstatbot|BLEXBot|vip0|Crawler|ClaudeBot|research-bot|Go-http-client",
+        'value' => "YandexBot|YandexTurbo|YandexMarket|Googlebot|DataForSeoBot|DotBot|bingbot|Mail.RU_Bot|PetalBot|MegaIndex.ru|serpstatbot|BLEXBot|vip0|Crawler|ClaudeBot|research-bot|Go-http-client",
         'area' => 'smartsessions_main',
     ],
     'bots_gc_maxlifetime' => [
