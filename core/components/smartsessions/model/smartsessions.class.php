@@ -5,7 +5,6 @@ class smartSessions
     /** @var modX $modx */
     public $modx;
 
-
     /**
      * @param modX $modx
      * @param array $config

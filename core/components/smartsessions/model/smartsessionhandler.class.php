@@ -1,6 +1,6 @@
 <?php
 
-require_once  MODX_CORE_PATH.'model/modx/modsessionhandler.class.php';
+require_once  MODX_CORE_PATH . 'model/modx/modsessionhandler.class.php';
 
 class smartSessionHandler extends modSessionHandler {
 
@@ -8,6 +8,12 @@ class smartSessionHandler extends modSessionHandler {
      * @var int Максимальное время жизни для сессий различных ботов, описанных в $botSignatures
      */
     public $botsMaxLifetime = 0;
+
+    /**
+     * @var int Максимальное время жизни для сессий с пустым User-Agent (поле user_agent)
+     */
+    public $emptyUserAgentMaxLifetime = 0;
+
     /**
      * @var int Максимальное время жизни для сессий авторизованных пользователей
      */
@@ -48,6 +54,13 @@ class smartSessionHandler extends modSessionHandler {
             $this->authorizedUsersMaxLifetime = $authorizedUsersMaxLifetime;
         } else {
             $this->authorizedUsersMaxLifetime = $this->gcMaxLifetime;
+        }
+
+        $emptyUserAgentMaxLifetime = (integer) $this->modx->getOption('smartsessions_empty_user_agent_gc_maxlifetime');
+        if ($emptyUserAgentMaxLifetime > 0) {
+            $this->emptyUserAgentMaxLifetime = $emptyUserAgentMaxLifetime;
+        } else {
+            $this->emptyUserAgentMaxLifetime = $this->gcMaxLifetime;
         }
 
 
@@ -123,6 +136,9 @@ class smartSessionHandler extends modSessionHandler {
         // Удаляем сессии ботов
         $result1 = $this->removeBotSessions();
 
+        // Удаляем сессии с пустым User-Agent
+        $result1 = $this->removeEmptyUserAgentSessions();
+
         // Удаляем сессии авторизованных пользователей
         $result2 = $this->removeAuthorizedUserSessions();
 
@@ -138,11 +154,11 @@ class smartSessionHandler extends modSessionHandler {
      * @return bool
      */
     private function removeBotSessions() {
-        $maxtime = time() - $this->botsMaxLifetime;
+        $maxLifeTime = time() - $this->botsMaxLifetime;
         $removed = 0;
         foreach ($this->botSignatures as $bot) {
             $criteria = array(
-                "access:<" => $maxtime,
+                "access:<" => $maxLifeTime,
                 "user_agent:LIKE" => "%" . $bot . "%",
             );
             $result = $this->modx->removeCollection('smartSession', $criteria);
@@ -155,14 +171,30 @@ class smartSessionHandler extends modSessionHandler {
     }
 
     /**
+     * Удаление сессий с пустым User-Agent
+     * @return bool
+     */
+    private function removeEmptyUserAgentSessions() {
+        $maxLifeTime = time() - $this->emptyUserAgentMaxLifetime;
+
+        $criteria = array(
+            "access:<" => $maxLifeTime,
+            "user_agent:=" => '',
+        );
+        $result = $this->modx->removeCollection('smartSession', $criteria);
+
+        return $result !== false;
+    }
+
+    /**
      * Удаление сессий авторизованных пользователей
      * @return bool
      */
     private function removeAuthorizedUserSessions() {
-        $maxtime = time() - $this->authorizedUsersMaxLifetime;
+        $maxLifeTime = time() - $this->authorizedUsersMaxLifetime;
 
         $criteria = array(
-            "access:<" => $maxtime,
+            "access:<" => $maxLifeTime,
             "user_id:>" => 0,
         );
         $result = $this->modx->removeCollection('smartSession', $criteria);
@@ -174,9 +206,9 @@ class smartSessionHandler extends modSessionHandler {
      * @return bool
      */
     private function removeCommonSessions() {
-        $maxtime = time() - $this->gcMaxLifetime;
+        $maxLifeTime = time() - $this->gcMaxLifetime;
         $criteria = array(
-            "access:<" => $maxtime
+            "access:<" => $maxLifeTime
         );
         // Если время хранения сессий авторизованных пользователей больше, чем общее время,
         // то не будем удаляем эти записи
@@ -210,7 +242,7 @@ class smartSessionHandler extends modSessionHandler {
 
             $user_agent = filter_input(INPUT_SERVER, 'HTTP_USER_AGENT', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
             if(empty($user_agent)) {
-                $user_agent = "";
+                $user_agent = '';
             }
             // Ограничиваем длину сохраняемого user_agent,
             // т.к. размер заголовка не лимитирован, а в базе выделено только 255 символов
