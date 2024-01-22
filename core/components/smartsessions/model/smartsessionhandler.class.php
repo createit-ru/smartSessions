@@ -239,6 +239,8 @@ class smartSessionHandler extends modSessionHandler {
         if ($autoCreate && !is_object($this->session)) {
             $this->modx->getRequest();
             $ip = $this->modx->request->getClientIp();
+            // Ограничим длину сохраняемого ip, т.к. иногда приходят не корректные данные
+            $ip = substr($ip['ip'], 0, 45);
 
             $user_agent = filter_input(INPUT_SERVER, 'HTTP_USER_AGENT', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
             if(empty($user_agent)) {
@@ -251,7 +253,7 @@ class smartSessionHandler extends modSessionHandler {
             $this->session= $this->modx->newObject('smartSession');
             $this->session->set('id', $id);
             $this->session->set('user_agent', $user_agent);
-            $this->session->set('ip', $ip['ip']);
+            $this->session->set('ip', $ip);
 
             $user = $this->modx->getAuthenticatedUser($this->modx->context ? $this->modx->context->key : '');
             if($user) {
